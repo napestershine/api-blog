@@ -2,10 +2,12 @@
 
 namespace App\Controller;
 
+use App\Entity\BlogPost;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\Routing\Annotation\Route;
+use Symfony\Component\Serializer\Serializer;
 
 /**
  * Class BlogController
@@ -67,5 +69,26 @@ class BlogController extends AbstractController
         return $this->json(
             self::POSTS[array_search($slug, array_column(self::POSTS, 'slug'))]
         );
+    }
+
+    /**
+     * @param Request $request
+     * @Route("/add", name="blog_add", methods={"POST"})
+     *
+     * @return JsonResponse
+     */
+    public function add(Request $request)
+    {
+        /** @var Serializer $serializer */
+        $serializer = $this->get('serializer');
+        $blogPost = $serializer->deserialize($request->getContent(), BlogPost::class, 'json');
+
+        $em = $this->getDoctrine()->getManager();
+        $em->persist($blogPost);
+        $em->flush();
+
+        return $this->json($blogPost);
+
+
     }
 }
